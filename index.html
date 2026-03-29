@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROJECT LAZARUS | Medical Forensic Recovery</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body id="app-body">
+  <!-- NEW: Forensic Boot Sequence Overlay -->
+  <div id="boot-overlay" class="boot-overlay">
+    <div class="boot-content">
+      <div class="boot-logo">LAZARUS_RECOVERY</div>
+      <div class="boot-progress-container">
+        <div id="boot-progress" class="boot-progress"></div>
+      </div>
+      <div id="boot-status" class="boot-status">Initializing forensic stream...</div>
+    </div>
+  </div>
+
+  <!-- Removed Global Alert Banner per user request. Alerts handled in Alert Center tab. -->
+
+  <div id="app-layout" class="app-layout">
+    
+    <!-- Left Navigation Sidebar -->
+    <nav class="main-nav">
+      <div class="nav-branding">
+        <i data-lucide="activity" style="color: var(--color-success); width: 32px; height: 32px;"></i>
+        <h2>LAZARUS</h2>
+      </div>
+      
+      <button class="nav-item active" data-view="view-vitals">
+        <i data-lucide="pulse"></i> Live Vitals
+      </button>
+      <button class="nav-item" data-view="view-patients">
+        <i data-lucide="users"></i> Patients
+      </button>
+      <button class="nav-item" data-view="view-pharmacy">
+        <i data-lucide="pill"></i> Pharmacy Details
+      </button>
+      <button class="nav-item" data-view="view-alerts" style="position: relative;">
+        <i data-lucide="bell"></i> Alert Center
+        <span id="nav-alert-badge" class="nav-badge" style="display: none;">0</span>
+      </button>
+
+      <button id="btn-open-report" class="nav-item" style="margin-top: 20px; border: 1px dashed var(--color-critical); color: var(--color-critical);">
+        <i data-lucide="file-text"></i> EXPORT REPORT
+      </button>
+
+      <div class="nav-status">
+        <i data-lucide="radio-receiver"></i> System Online<br/>
+        <span id="kpi-latency" style="color: var(--color-success)">45</span>ms
+      </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="content-wrapper">
+      <header>
+        <h1><span>PROJECT LAZARUS</span> | Medical Forensic System</h1>
+        
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <div class="selector-container">
+            <span style="font-size: 0.8rem; color: var(--color-text-dim); text-transform: uppercase;">Monitor ID:</span>
+            <select id="ghost-id-selector" class="nav-select">
+              <option value="G-100">G-100</option>
+              <!-- Populated via JS -->
+            </select>
+          </div>
+          <div class="timestamp">
+            <span class="status-dot active"></span>
+            <span id="live-time">00:00:00</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- VIEW 1: Live Vitals -->
+      <section id="view-vitals" class="dashboard-view active">
+        <div class="card vitals-main">
+           <div class="card-header" style="justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <i data-lucide="activity"></i> Real-Time Telemetry
+            </div>
+            <div class="vitals-controls">
+              <button id="mode-raw" class="vitals-toggle">RAW</button>
+              <button id="mode-filtered" class="vitals-toggle active">FILTERED</button>
+              <button id="mode-compare" class="vitals-toggle">COMPARE</button>
+            </div>
+          </div>
+          
+          <div class="kpi-row">
+            <div class="kpi-box">
+              <div class="kpi-label">Heart Rate (BPM)</div>
+              <div class="kpi-value" id="kpi-bpm">--</div>
+              <div class="kpi-label" style="font-size: 0.7rem; color: var(--color-success)">NORMAL: 60-100</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-label">O2 Saturation</div>
+              <div class="kpi-value" id="kpi-o2">--%</div>
+              <div class="kpi-label" style="font-size: 0.7rem; color: var(--color-success)">NORMAL: >95%</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-label">Confidence Score</div>
+              <div class="kpi-value" id="kpi-confidence" style="color: var(--color-primary)">98.5%</div>
+              <div class="kpi-label" style="font-size: 0.7rem;">GAPS INTERPOLATED</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-label">System Target</div>
+              <div class="kpi-value" style="color: var(--color-text); font-size: 1.3rem; margin: 15px 0;">ID: G-100</div>
+              <div class="kpi-label" style="font-size: 0.7rem;">GHOST IDENTITY</div>
+            </div>
+          </div>
+  
+          <div class="chart-container" style="margin-top: 20px;">
+            <canvas id="vitalsChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: Patients Identity Disambiguation -->
+      <section id="view-patients" class="dashboard-view">
+        <div class="card patient-grid full-width">
+          <div class="card-header">
+            <i data-lucide="users"></i> Disambiguated Identities - Parity Validation
+          </div>
+          <div style="font-size: 0.9rem; color: var(--color-text-dim); margin-bottom: 20px; line-height: 1.5;">
+            <i data-lucide="info" style="width: 16px; height: 16px; vertical-align: middle;"></i>
+            <strong>Challenge 1:</strong> Two distinct patients share the ghost ID <code>G-100</code> due to database corruption. 
+            They are distinguished dynamically by their Vital Sign Parity checksum variations mathematically processed in <code>forensics.js</code>.
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <!-- Patient 1 -->
+            <div class="patient-info large">
+              <div class="patient-row header">
+                <strong><span id="p1-name" style="font-size: 1.2rem;">Loading...</span></strong>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <div id="p1-quality" class="quality-badge">
+                    <i data-lucide="shield-check" style="width:12px"></i> 100% QUALITY
+                  </div>
+                  <span class="badge" id="p1-parity">CALC...</span>
+                </div>
+              </div>
+              <div class="separator"></div>
+              <div class="patient-row"><span class="label">Ghost ID:</span> <span id="p1-id">---</span></div>
+              <div class="patient-row"><span class="label">Age at incident:</span> <span id="p1-age">---</span></div>
+              <div class="patient-row"><span class="label">Recovered Ward:</span> <span>3C-Cardiology</span></div>
+            </div>
+  
+            <!-- Patient 2 -->
+            <div class="patient-info large">
+              <div class="patient-row header">
+                <strong><span id="p2-name" style="font-size: 1.2rem;">Loading...</span></strong>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <div id="p2-quality" class="quality-badge">
+                    <i data-lucide="shield-check" style="width:12px"></i> 100% QUALITY
+                  </div>
+                  <span class="badge" id="p2-parity">CALC...</span>
+                </div>
+              </div>
+              <div class="separator"></div>
+              <div class="patient-row"><span class="label">Ghost ID:</span> <span id="p2-id">---</span></div>
+              <div class="patient-row"><span class="label">Age at incident:</span> <span id="p2-age">---</span></div>
+              <div class="patient-row"><span class="label">Recovered Ward:</span> <span>2A-Neurology</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NEW: Anomaly Identification & Resolution Log -->
+        <div class="card full-width" style="margin-top: 20px; border-left: 4px solid var(--color-warning);">
+          <div class="card-header">
+            <i data-lucide="search-code"></i> Forensic Anomaly Discovery Engine
+          </div>
+          <div style="font-size: 0.9rem; color: var(--color-text-dim); margin-bottom: 15px;">
+            The system scanned all 11,000+ records to identify systemic corruptions and sensor malfunctions.
+          </div>
+          <div class="table-scroll-container" style="max-height: 300px;">
+            <table class="pharmacy-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Source</th>
+                  <th>Observation</th>
+                  <th>Forensic Resolution</th>
+                </tr>
+              </thead>
+              <tbody id="audit-engine-body">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- NEW: Master Patient List -->
+        <div class="card full-width" style="margin-top: 20px;">
+          <div class="card-header">
+            <i data-lucide="database"></i> System-Wide Patient Database
+          </div>
+          <div class="table-scroll-container" style="max-height: 50vh;">
+            <table class="pharmacy-table">
+              <thead>
+                <tr>
+                  <th>Internal ID</th>
+                  <th>Ghost ID</th>
+                  <th>Parity Hash</th>
+                  <th>Decrypted Patient Name</th>
+                  <th>Age</th>
+                </tr>
+              </thead>
+              <tbody id="master-patient-body">
+                <!-- Iterates 1,000+ rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: Pharmacy Portal -->
+      <section id="view-pharmacy" class="dashboard-view">
+        <div class="card full-width" style="margin-bottom: 20px;">
+          <div class="card-header">
+            <i data-lucide="shield-check"></i> Global Age-Based Cipher Decryption Auditing
+          </div>
+          <div style="font-size: 0.9rem; color: var(--color-text-dim); margin-bottom: 20px; line-height: 1.5;">
+            <strong>Challenge 2:</strong> Ransomware encrypted all medications using a Caesar Cipher. 
+            This table audits the active decryption of every single prescription across all 1,000+ identities. The shift is automatically computed against the patient's individual age.
+          </div>
+          <div class="table-scroll-container" style="max-height: 65vh;">
+            <table class="pharmacy-table">
+            <thead>
+              <tr>
+                <th>Patient</th>
+                <th>Encrypted Ciphertext</th>
+                <th>Age Key (Shift)</th>
+                <th>Decrypted Medication</th>
+                <th>Dosage</th>
+              </tr>
+            </thead>
+              <tbody id="pharmacy-body">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: Alert Center -->
+      <section id="view-alerts" class="dashboard-view">
+        <div class="card full-width">
+          <div class="card-header" style="color: var(--color-warning);">
+            <i data-lucide="bell-ring"></i> Incident & Anomaly Archive
+          </div>
+          <div style="font-size: 0.9rem; color: var(--color-text-dim); margin-bottom: 20px;">
+            Real-time log of systemic telemetry departures dynamically logged from identical incoming CSV heart_rate streams.
+          </div>
+          
+          <table class="pharmacy-table">
+            <thead>
+              <tr>
+                <th><i data-lucide="clock" style="width: 14px"></i> Timestamp</th>
+                <th>Patient Name</th>
+                <th>Age</th>
+                <th>Severity</th>
+                <th>Metric Affected</th>
+                <th>Incident Details</th>
+              </tr>
+            </thead>
+            <tbody id="alert-log-body">
+              <tr id="empty-alerts">
+                <td colspan="4" style="text-align: center; color: var(--color-text-dim); padding: 30px;">No anomalies detected yet over the telemetry stream. System standing by.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div> <!-- end content wrapper -->
+    
+    <!-- Scrolling Anomaly Ticker -->
+    <footer class="ticker-wrap">
+      <div id="ticker-feed" class="ticker-content">
+        <!-- Live Ticker Items -->
+      </div>
+    </footer>
+  </div> <!-- end app layout -->
+
+  <!-- NEW: Forensic Report Modal -->
+  <div id="report-modal-backdrop" class="modal-backdrop">
+    <div class="report-modal">
+      <div class="report-header">
+        <div class="report-title">
+          <p style="font-size: 0.7rem; color: #64748b; margin: 0; text-transform: uppercase;">Recovery Audit Summary</p>
+          <h2>LAZARUS_FORENSIC_OFFICIAL</h2>
+        </div>
+        <i data-lucide="activity" style="color: var(--color-critical); width: 40px; height: 40px;"></i>
+      </div>
+
+      <div class="report-stat-grid">
+        <div class="report-stat-box">
+          <label>Identities Reconstructed</label>
+          <span id="stat-identities">1,002 / 1,002</span>
+        </div>
+        <div class="report-stat-box">
+          <label>Duplicate rx_ids Resolved</label>
+          <span id="stat-duplicates">49</span>
+        </div>
+        <div class="report-stat-box">
+          <label>BPM Spikes Suppressed</label>
+          <span id="stat-spikes">1,533</span>
+        </div>
+        <div class="report-stat-box">
+          <label>O2 Sensors Recovered</label>
+          <span id="stat-o2">1,982 Gaps</span>
+        </div>
+      </div>
+
+      <p style="font-size: 0.85rem; line-height: 1.6; color: #475569;">
+        This document certifies that the <strong>LAZARUS Forensic Engine</strong> has successfully audited and recovered the corrupted hospital database. 
+        Identity disambiguation was performed via parity verification, and pharmacological records were decrypted using dynamic age-key derivation.
+      </p>
+
+      <div class="report-seal">
+        OFFICIAL<br/>FORENSIC<br/>RECOVERY
+      </div>
+
+      <div class="report-actions">
+        <button id="btn-close-report" style="padding: 10px 20px; background: #e2e8f0; border: none; font-weight: 700; cursor: pointer;">CLOSE</button>
+        <button onclick="window.print()" style="padding: 10px 20px; background: #0f172a; color: white; border: none; font-weight: 700; cursor: pointer;">PRINT TO PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts loaded globally -->
+  <script src="forensics.js"></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
